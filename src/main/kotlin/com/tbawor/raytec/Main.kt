@@ -5,7 +5,7 @@ import java.io.FileOutputStream
 fun main(args: Array<String>) {
     // Image
     val aspectRatio = 16.0 / 9.0
-    val imageWidth = 400
+    val imageWidth = 1000
     val imageHeight = (imageWidth / aspectRatio).toInt()
 
     // Camera
@@ -52,7 +52,21 @@ fun main(args: Array<String>) {
 }
 
 fun rayColor(r: Ray): Color {
+
+    if (hitSphere(Point3D(0.0, 0.0, -1.0), 0.5, r)) {
+        return Color(1.0, 0.0, 0.0)
+    }
+
     val unitDirection = r.direction.unitVector()
     val t = 0.5 * (unitDirection.y + 1.0)
     return Color(1.0, 1.0, 1.0) * (1.0 - t) + Color(0.5, 0.7, 1.0) * t
+}
+
+fun hitSphere(center: Point3D, radius: Double, r: Ray): Boolean {
+    val oc = r.origin - center
+    val a = r.direction.dot(r.direction)
+    val b = 2.0 * oc.dot(r.direction)
+    val c = oc.dot(oc) - radius * radius
+    val discriminant = b * b - 4 * a * c
+    return discriminant > 0
 }
