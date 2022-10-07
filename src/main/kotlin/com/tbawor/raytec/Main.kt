@@ -1,13 +1,24 @@
 package com.tbawor.raytec
 
+import com.tbawor.raytec.objects.HitRecord
+import com.tbawor.raytec.objects.Hittable
+import com.tbawor.raytec.objects.HittableList
+import com.tbawor.raytec.objects.Sphere
 import java.io.FileOutputStream
-import kotlin.math.sqrt
 
 fun main(args: Array<String>) {
     // Image
     val aspectRatio = 16.0 / 9.0
-    val imageWidth = 2000
+    val imageWidth = 400
     val imageHeight = (imageWidth / aspectRatio).toInt()
+
+    // World
+    val world = HittableList(
+        listOf(
+            Sphere(Vector3D(0.0, 0.0, -1.0), 0.5),
+            Sphere(Vector3D(0.0, -100.5, -1.0), 100.0)
+        )
+    )
 
     // Camera
     val viewportHeight = 2.0
@@ -26,8 +37,8 @@ fun main(args: Array<String>) {
         for (x in 0 until imageWidth) {
             val u = x.toDouble() / (imageWidth - 1)
             val v = y.toDouble() / (imageHeight - 1)
-            val r = Ray(origin, lowerLeftCorner + horizontal * u + vertical * v - origin)
-            val color = rayColor(r)
+            val r = Ray(origin, lowerLeftCorner + horizontal * u + vertical * v)
+            val color = rayColor(r, world)
             bbs.setPixel(x, y, color.toAwtColor())
         }
     }
@@ -39,7 +50,8 @@ fun main(args: Array<String>) {
         val header = "P6\n$imageWidth $imageHeight\n255\n".toByteArray()
         with(it) {
             write(header)
-            for (y in 0 until imageHeight) {
+            // need to write to buffer from top of the image to bottom
+            for (y in imageHeight - 1 downTo 0) {
                 for (x in 0 until imageWidth) {
                     val c = bbs.getPixel(x, y)
                     buffer[x * 3] = c.red.toByte()
@@ -52,29 +64,21 @@ fun main(args: Array<String>) {
     }
 }
 
-fun rayColor(r: Ray): Color {
-    val pointOfHitAlongRay = rayParameterForSphereHit(Point3D(0.0, 0.0, -1.0), 0.5, r)
-    // only if we hit the sphere in front of camera
-    if (pointOfHitAlongRay > 0.0) { // second hit will be on the back of sphere
-        val normalOfHitRay = (r.pointAtParameter(pointOfHitAlongRay) - Point3D(0.0, 0.0, -1.0)).unitVector()
-        return Color(normalOfHitRay.x + 1.0, normalOfHitRay.y + 1.0, normalOfHitRay.z + 1.0) * 0.5
+fun rayColor(ray: Ray, world: Hittable): Color {
+    val hitRecord: HitRecord? = world.isHit(ray, 0.0, Double.MAX_VALUE)
+
+    if (hitRecord != null) { // ray hit something
+        // Order of operations are very important here
+        return (
+            hitRecord.normal + Color(
+                1.0,
+                1.0,
+                1.0
+            )
+            ) * 0.5 // normal has range -1.0 to 1.0, so we need to scale it to 0.0 to 1.0
     }
 
-    val unitDirection = r.direction.unitVector()
-    val t = 0.5 * (unitDirection.y + 1.0)
-    return Color(1.0, 1.0, 1.0) * (1.0 - t) + Color(0.5, 0.7, 1.0) * t
-}
-
-fun rayParameterForSphereHit(center: Point3D, radius: Double, r: Ray): Double {
-    val oc = r.origin - center
-    val a = r.direction.lengthSquared()
-    val halfB = oc.dot(r.direction)
-    val c = oc.lengthSquared() - radius * radius
-    val discriminant = halfB * halfB - a * c
-
-    return if (discriminant < 0) {
-        -1.0
-    } else {
-        (-halfB - sqrt(discriminant)) / a
-    }
+    val unitVectorOfDirection = ray.direction.unitVector()
+    val t = 0.5 * (unitVectorOfDirection.y + 1.0) // normalize t to 0.0 to 1.0
+    return (Color(1.0, 1.0, 1.0) * (1.0 - t)) + (Color(0.5, 0.7, 1.0) * t) // make it blue
 }
