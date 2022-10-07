@@ -25,6 +25,10 @@ data class Vector3D(
     fun unitVector() = this / length()
 
     fun toAwtColor() = java.awt.Color(x.toFloat(), y.toFloat(), z.toFloat())
+
+    fun lengthSquared(): Double {
+        return this.dot(this)
+    }
 }
 
 typealias Color = Vector3D

@@ -1,11 +1,12 @@
 package com.tbawor.raytec
 
 import java.io.FileOutputStream
+import kotlin.math.sqrt
 
 fun main(args: Array<String>) {
     // Image
     val aspectRatio = 16.0 / 9.0
-    val imageWidth = 1000
+    val imageWidth = 2000
     val imageHeight = (imageWidth / aspectRatio).toInt()
 
     // Camera
@@ -52,9 +53,11 @@ fun main(args: Array<String>) {
 }
 
 fun rayColor(r: Ray): Color {
-
-    if (hitSphere(Point3D(0.0, 0.0, -1.0), 0.5, r)) {
-        return Color(1.0, 0.0, 0.0)
+    val pointOfHitAlongRay = rayParameterForSphereHit(Point3D(0.0, 0.0, -1.0), 0.5, r)
+    // only if we hit the sphere in front of camera
+    if (pointOfHitAlongRay > 0.0) { // second hit will be on the back of sphere
+        val normalOfHitRay = (r.pointAtParameter(pointOfHitAlongRay) - Point3D(0.0, 0.0, -1.0)).unitVector()
+        return Color(normalOfHitRay.x + 1.0, normalOfHitRay.y + 1.0, normalOfHitRay.z + 1.0) * 0.5
     }
 
     val unitDirection = r.direction.unitVector()
@@ -62,11 +65,16 @@ fun rayColor(r: Ray): Color {
     return Color(1.0, 1.0, 1.0) * (1.0 - t) + Color(0.5, 0.7, 1.0) * t
 }
 
-fun hitSphere(center: Point3D, radius: Double, r: Ray): Boolean {
+fun rayParameterForSphereHit(center: Point3D, radius: Double, r: Ray): Double {
     val oc = r.origin - center
-    val a = r.direction.dot(r.direction)
-    val b = 2.0 * oc.dot(r.direction)
-    val c = oc.dot(oc) - radius * radius
-    val discriminant = b * b - 4 * a * c
-    return discriminant > 0
+    val a = r.direction.lengthSquared()
+    val halfB = oc.dot(r.direction)
+    val c = oc.lengthSquared() - radius * radius
+    val discriminant = halfB * halfB - a * c
+
+    return if (discriminant < 0) {
+        -1.0
+    } else {
+        (-halfB - sqrt(discriminant)) / a
+    }
 }
