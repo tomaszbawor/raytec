@@ -12,17 +12,17 @@ fun main(args: Array<String>) {
     val startTime = System.currentTimeMillis()
     // Image
     val aspectRatio = 16.0 / 9.0
-    val imageWidth = 1000
+    val imageWidth = 2000
     val imageHeight = (imageWidth / aspectRatio).toInt()
-    val samplesPerPixel = 100
-    val maxDepth = 50
+    val samplesPerPixel = 200
+    val maxDepth = 75
 
     // World
     val world = HittableList(
         listOf(
-            Sphere(Vector3D(0.0, 0.0, -1.0), 0.5, Lambertian(Vector3D(0.1, 0.2, 0.5))),
-            Sphere(Vector3D(1.0, 0.0, -1.0), 0.5, Metal(Vector3D(0.8, 0.6, 0.2))),
-            Sphere(Vector3D(0.0, -100.5, -1.0), 100.0, Lambertian(Vector3D(0.8, 0.8, 0.0)))
+            Sphere(Vector3D(0.0, 0.0, -1.0), 0.5, Lambertian(Color(0.1, 0.2, 0.5))),
+            Sphere(Vector3D(1.0, 0.0, -1.0), 0.5, Metal(Color(0.8, 0.6, 0.2))),
+            Sphere(Vector3D(0.0, -100.5, -1.0), 100.0, Lambertian(Color(0.8, 0.8, 0.0)))
         )
     )
 
