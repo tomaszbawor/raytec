@@ -9,8 +9,9 @@ import java.io.FileOutputStream
 fun main(args: Array<String>) {
     // Image
     val aspectRatio = 16.0 / 9.0
-    val imageWidth = 400
+    val imageWidth = 2000
     val imageHeight = (imageWidth / aspectRatio).toInt()
+    val samplesPerPixel = 100
 
     // World
     val world = HittableList(
@@ -21,14 +22,7 @@ fun main(args: Array<String>) {
     )
 
     // Camera
-    val viewportHeight = 2.0
-    val viewportWidth = aspectRatio * viewportHeight
-    val focalLength = 1.0
-
-    val origin = Point3D(0.0, 0.0, 0.0)
-    val horizontal = Vector3D(viewportWidth, 0.0, 0.0)
-    val vertical = Vector3D(0.0, viewportHeight, 0.0)
-    val lowerLeftCorner = origin - horizontal / 2.0 - vertical / 2.0 - Vector3D(0.0, 0.0, focalLength)
+    val camera = Camera()
 
     // Render
     val bbs = BitmapStorage(imageWidth, imageHeight)
@@ -37,7 +31,7 @@ fun main(args: Array<String>) {
         for (x in 0 until imageWidth) {
             val u = x.toDouble() / (imageWidth - 1)
             val v = y.toDouble() / (imageHeight - 1)
-            val r = Ray(origin, lowerLeftCorner + horizontal * u + vertical * v)
+            val r = camera.getRay(u, v)
             val color = rayColor(r, world)
             bbs.setPixel(x, y, color.toAwtColor())
         }
