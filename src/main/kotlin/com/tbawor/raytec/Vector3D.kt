@@ -7,6 +7,29 @@ data class Vector3D(
     val y: Double,
     val z: Double
 ) {
+
+    companion object {
+        fun random(): Vector3D {
+            return Vector3D(Math.random(), Math.random(), Math.random())
+        }
+
+        fun random(min: Double, max: Double): Vector3D {
+            return Vector3D(
+                Math.random() * (max - min) + min,
+                Math.random() * (max - min) + min,
+                Math.random() * (max - min) + min
+            )
+        }
+
+        fun randomInUnitSphere(): Vector3D {
+            while (true) {
+                val p = Vector3D.random(-1.0, 1.0)
+                if (p.lengthSquared() >= 1) continue
+                return p
+            }
+        }
+    }
+
     operator fun plus(other: Vector3D) = Vector3D(x + other.x, y + other.y, z + other.z)
     operator fun minus(other: Vector3D) = Vector3D(x - other.x, y - other.y, z - other.z)
     operator fun times(other: Vector3D) = Vector3D(x * other.x, y * other.y, z * other.z)

@@ -9,7 +9,7 @@ import java.io.FileOutputStream
 fun main(args: Array<String>) {
     // Image
     val aspectRatio = 16.0 / 9.0
-    val imageWidth = 2000
+    val imageWidth = 700
     val imageHeight = (imageWidth / aspectRatio).toInt()
     val samplesPerPixel = 100
 
@@ -29,10 +29,17 @@ fun main(args: Array<String>) {
 
     for (y in 0 until imageHeight) {
         for (x in 0 until imageWidth) {
-            val u = x.toDouble() / (imageWidth - 1)
-            val v = y.toDouble() / (imageHeight - 1)
-            val r = camera.getRay(u, v)
-            val color = rayColor(r, world)
+
+            var color = Color(0.0, 0.0, 0.0)
+            for (s in 0 until samplesPerPixel) {
+                // add random to sample to get anti-aliasing
+                val u = (x + Math.random()) / (imageWidth - 1)
+                val v = (y + Math.random()) / (imageHeight - 1)
+                val ray = camera.getRay(u, v)
+                color += rayColor(ray, world, 10)
+            }
+            // normalize color based on samples per pixel
+            color /= samplesPerPixel.toDouble()
             bbs.setPixel(x, y, color.toAwtColor())
         }
     }
@@ -58,18 +65,16 @@ fun main(args: Array<String>) {
     }
 }
 
-fun rayColor(ray: Ray, world: Hittable): Color {
+fun rayColor(ray: Ray, world: Hittable, depth: Int): Color {
     val hitRecord: HitRecord? = world.isHit(ray, 0.0, Double.MAX_VALUE)
 
+    if (depth <= 0) {
+        return Color(0.0, 0.0, 0.0)
+    }
+
     if (hitRecord != null) { // ray hit something
-        // Order of operations are very important here
-        return (
-            hitRecord.normal + Color(
-                1.0,
-                1.0,
-                1.0
-            )
-            ) * 0.5 // normal has range -1.0 to 1.0, so we need to scale it to 0.0 to 1.0
+        val target = hitRecord.point + hitRecord.normal + Vector3D.randomInUnitSphere()
+        return rayColor(Ray(hitRecord.point, target - hitRecord.point), world, depth - 1) * 0.5
     }
 
     val unitVectorOfDirection = ray.direction.unitVector()
