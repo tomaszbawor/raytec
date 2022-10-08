@@ -28,6 +28,10 @@ data class Vector3D(
                 return p
             }
         }
+
+        fun randomUnitVector(): Vector3D {
+            return randomInUnitSphere().unitVector()
+        }
     }
 
     operator fun plus(other: Vector3D) = Vector3D(x + other.x, y + other.y, z + other.z)
@@ -36,6 +40,10 @@ data class Vector3D(
     operator fun times(scalar: Double) = Vector3D(x * scalar, y * scalar, z * scalar)
     operator fun div(scalar: Double) = Vector3D(x / scalar, y / scalar, z / scalar)
     operator fun unaryMinus() = Vector3D(-x, -y, -z)
+
+    fun isNearZero() = (x < 1e-8) && (y < 1e-8) && (z < 1e-8)
+
+    fun normalize() = this / length()
 
     fun dot(other: Vector3D) = x * other.x + y * other.y + z * other.z
     fun cross(other: Vector3D) = Vector3D(

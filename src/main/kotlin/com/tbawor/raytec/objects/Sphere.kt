@@ -2,11 +2,13 @@ package com.tbawor.raytec.objects
 
 import com.tbawor.raytec.Point3D
 import com.tbawor.raytec.Ray
+import com.tbawor.raytec.materials.Material
 import kotlin.math.sqrt
 
 class Sphere(
     private val center: Point3D,
     private val radius: Double,
+    private val material: Material
 ) : Hittable {
 
     override fun isHit(ray: Ray, tMin: Double, tMax: Double): HitRecord? {
@@ -33,6 +35,7 @@ class Sphere(
             t = root,
             point = ray.pointAtParameter(root),
             normal = (ray.pointAtParameter(root) - center) / radius,
+            material = material,
             isFrontFace = null
         )
         // Todo: explain this

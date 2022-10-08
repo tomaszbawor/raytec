@@ -3,6 +3,7 @@ package com.tbawor.raytec.objects
 import com.tbawor.raytec.Point3D
 import com.tbawor.raytec.Ray
 import com.tbawor.raytec.Vector3D
+import com.tbawor.raytec.materials.Material
 
 interface Hittable {
     fun isHit(ray: Ray, tMin: Double, tMax: Double): HitRecord?
@@ -11,6 +12,7 @@ interface Hittable {
 class HitRecord(
     val point: Point3D,
     var normal: Vector3D,
+    val material: Material,
     val t: Double,
     var isFrontFace: Boolean?
 ) {

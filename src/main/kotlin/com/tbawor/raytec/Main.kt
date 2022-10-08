@@ -1,5 +1,7 @@
 package com.tbawor.raytec
 
+import com.tbawor.raytec.materials.Lambertian
+import com.tbawor.raytec.materials.Metal
 import com.tbawor.raytec.objects.HitRecord
 import com.tbawor.raytec.objects.Hittable
 import com.tbawor.raytec.objects.HittableList
@@ -7,17 +9,20 @@ import com.tbawor.raytec.objects.Sphere
 import java.io.FileOutputStream
 
 fun main(args: Array<String>) {
+    val startTime = System.currentTimeMillis()
     // Image
     val aspectRatio = 16.0 / 9.0
-    val imageWidth = 700
+    val imageWidth = 1000
     val imageHeight = (imageWidth / aspectRatio).toInt()
     val samplesPerPixel = 100
+    val maxDepth = 50
 
     // World
     val world = HittableList(
         listOf(
-            Sphere(Vector3D(0.0, 0.0, -1.0), 0.5),
-            Sphere(Vector3D(0.0, -100.5, -1.0), 100.0)
+            Sphere(Vector3D(0.0, 0.0, -1.0), 0.5, Lambertian(Vector3D(0.1, 0.2, 0.5))),
+            Sphere(Vector3D(1.0, 0.0, -1.0), 0.5, Metal(Vector3D(0.8, 0.6, 0.2))),
+            Sphere(Vector3D(0.0, -100.5, -1.0), 100.0, Lambertian(Vector3D(0.8, 0.8, 0.0)))
         )
     )
 
@@ -36,7 +41,7 @@ fun main(args: Array<String>) {
                 val u = (x + Math.random()) / (imageWidth - 1)
                 val v = (y + Math.random()) / (imageHeight - 1)
                 val ray = camera.getRay(u, v)
-                color += rayColor(ray, world, 10)
+                color += rayColor(ray, world, maxDepth)
             }
             // normalize color based on samples per pixel
             color /= samplesPerPixel.toDouble()
@@ -63,21 +68,36 @@ fun main(args: Array<String>) {
             }
         }
     }
+
+    val endTime = System.currentTimeMillis()
+    // time in seconds
+    val time = (endTime - startTime) / 1000.0
+    println("Rendered in $time ms")
 }
 
 fun rayColor(ray: Ray, world: Hittable, depth: Int): Color {
-    val hitRecord: HitRecord? = world.isHit(ray, 0.0, Double.MAX_VALUE)
+    val hitRecord: HitRecord? = world.isHit(ray, 0.0001, Double.MAX_VALUE)
 
+    // if we exceeded the ray bounce limit, no more light is gathered
     if (depth <= 0) {
         return Color(0.0, 0.0, 0.0)
     }
 
     if (hitRecord != null) { // ray hit something
-        val target = hitRecord.point + hitRecord.normal + Vector3D.randomInUnitSphere()
-        return rayColor(Ray(hitRecord.point, target - hitRecord.point), world, depth - 1) * 0.5
+
+        val scatter = hitRecord.material.scatter(ray, hitRecord)
+        if (scatter != null) {
+            return rayColor(scatter.ray, world, depth - 1) * scatter.color
+        }
+        return Color(0.0, 0.0, 0.0)
     }
 
     val unitVectorOfDirection = ray.direction.unitVector()
     val t = 0.5 * (unitVectorOfDirection.y + 1.0) // normalize t to 0.0 to 1.0
     return (Color(1.0, 1.0, 1.0) * (1.0 - t)) + (Color(0.5, 0.7, 1.0) * t) // make it blue
+}
+
+fun randomInHemisphere(normal: Vector3D): Vector3D {
+    val inUnitSphere = Vector3D.randomInUnitSphere()
+    return if (inUnitSphere.dot(normal) > 0.0) inUnitSphere else -inUnitSphere
 }
