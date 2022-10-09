@@ -12,7 +12,7 @@ fun main(args: Array<String>) {
     val startTime = System.currentTimeMillis()
     // Image
     val aspectRatio = 16.0 / 9.0
-    val imageWidth = 2000
+    val imageWidth = 500
     val imageHeight = (imageWidth / aspectRatio).toInt()
     val samplesPerPixel = 200
     val maxDepth = 75
@@ -84,7 +84,6 @@ fun rayColor(ray: Ray, world: Hittable, depth: Int): Color {
     }
 
     if (hitRecord != null) { // ray hit something
-
         val scatter = hitRecord.material.scatter(ray, hitRecord)
         if (scatter != null) {
             return rayColor(scatter.ray, world, depth - 1) * scatter.color
@@ -92,12 +91,8 @@ fun rayColor(ray: Ray, world: Hittable, depth: Int): Color {
         return Color(0.0, 0.0, 0.0)
     }
 
+    // background color
     val unitVectorOfDirection = ray.direction.unitVector()
     val t = 0.5 * (unitVectorOfDirection.y + 1.0) // normalize t to 0.0 to 1.0
     return (Color(1.0, 1.0, 1.0) * (1.0 - t)) + (Color(0.5, 0.7, 1.0) * t) // make it blue
-}
-
-fun randomInHemisphere(normal: Vector3D): Vector3D {
-    val inUnitSphere = Vector3D.randomInUnitSphere()
-    return if (inUnitSphere.dot(normal) > 0.0) inUnitSphere else -inUnitSphere
 }
