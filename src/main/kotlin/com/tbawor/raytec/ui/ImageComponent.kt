@@ -6,8 +6,11 @@ import java.awt.Graphics
 
 class ImageComponent(private val image: BitmapStorage) : Canvas() {
 
+    init {
+        setSize(image.width, image.height)
+    }
+
     override fun paint(g: Graphics?) {
-        super.paint(g)
         g?.drawImage(image.image, 0, 0, null)
     }
 }
