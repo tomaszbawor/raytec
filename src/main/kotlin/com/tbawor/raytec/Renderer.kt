@@ -6,20 +6,23 @@ import com.tbawor.raytec.objects.HitRecord
 import com.tbawor.raytec.objects.Hittable
 import com.tbawor.raytec.objects.HittableList
 import com.tbawor.raytec.objects.Sphere
+import java.awt.image.BufferedImage
 
-class Renderer {
+class Renderer(
+    private val progressUpdater: (Int) -> Unit,
+) {
 
     val aspectRatio = 16.0 / 9.0
-    val IMAGE_WIDTH = 800
+    val IMAGE_WIDTH = 600
     val IMAGE_HEIGHT = (IMAGE_WIDTH / aspectRatio).toInt()
 
-    val imageBuffer = BitmapStorage(IMAGE_WIDTH, IMAGE_HEIGHT)
+    val imageBuffer = BufferedImage(IMAGE_WIDTH, IMAGE_HEIGHT, BufferedImage.TYPE_INT_RGB)
 
     fun render() {
         val startTime = System.currentTimeMillis()
         // Image
-        val samplesPerPixel = 30
-        val maxDepth = 10
+        val samplesPerPixel = 100
+        val maxDepth = 50
 
         // World
         val world = HittableList(
@@ -34,6 +37,8 @@ class Renderer {
 
         // Camera
         val camera = Camera()
+        val allPixels = IMAGE_WIDTH * IMAGE_HEIGHT
+        var currentPixelsPainted = 0
 
         // Render
         for (y in 0 until IMAGE_HEIGHT) {
@@ -48,10 +53,13 @@ class Renderer {
                     val ray = camera.getRay(u, v)
                     color += rayColor(ray, world, maxDepth)
                 }
-
                 // normalize color based on samples per pixel
                 color /= samplesPerPixel.toDouble()
-                imageBuffer.setPixel(x, IMAGE_HEIGHT - y - 1, color.toAwtColor())
+                // image coordinates are flipped
+                imageBuffer.setRGB(x, IMAGE_HEIGHT - y - 1, color.toAwtColor().rgb)
+                currentPixelsPainted++
+                val percentage = (currentPixelsPainted.toDouble() / allPixels.toDouble()) * 100
+                progressUpdater(percentage.toInt())
             }
         }
 
