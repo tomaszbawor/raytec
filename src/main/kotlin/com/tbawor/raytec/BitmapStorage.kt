@@ -16,7 +16,7 @@ class BitmapStorage(private val width: Int, private val height: Int) {
         image.graphics.drawImage(temp, 0, 0, null)
     }
 
-    fun setPixel(x: Int, y: Int, c: Color) = image.setRGB(x, y, c.rgb)
-
-    fun getPixel(x: Int, y: Int) = Color(image.getRGB(x, y))
+    fun setPixel(x: Int, y: Int, c: Color) {
+        image.setRGB(x, y, c.rgb)
+    }
 }
