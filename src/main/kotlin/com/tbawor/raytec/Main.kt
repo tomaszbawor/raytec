@@ -1,13 +1,15 @@
 package com.tbawor.raytec
 
 import com.tbawor.raytec.ui.ApplicationWindow
-import java.awt.EventQueue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.swing.Swing
 
 fun main(args: Array<String>) {
-    EventQueue.invokeLater(::createAndShowUi)
+    Dispatchers.Unconfined
 }
 
 fun createAndShowUi() {
     val application = ApplicationWindow()
-    application.startApp()
 }

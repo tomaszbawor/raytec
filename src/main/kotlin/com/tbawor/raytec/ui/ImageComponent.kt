@@ -11,7 +11,6 @@ class ImageComponent(private val image: BufferedImage) : Canvas() {
     }
 
     override fun paint(g: Graphics?) {
-        super.paint(g)
         g?.drawImage(image, 0, 0, null)
     }
 }

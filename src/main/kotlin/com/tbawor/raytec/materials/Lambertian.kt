@@ -14,7 +14,7 @@ class Lambertian(color: Color) : Material(color) {
             scatterDirection = hit.normal
         }
 
-        val scattered = Ray(hit.point, scatterDirection)
-        return Scatter(scattered, color)
+        val scatteredRay = Ray(hit.point, scatterDirection)
+        return Scatter(scatteredRay, color)
     }
 }

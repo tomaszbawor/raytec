@@ -8,21 +8,21 @@ import com.tbawor.raytec.objects.HittableList
 import com.tbawor.raytec.objects.Sphere
 import java.awt.image.BufferedImage
 
-class Renderer(
-    private val progressUpdater: (Int) -> Unit,
-) {
+class Renderer {
 
-    val aspectRatio = 16.0 / 9.0
-    val IMAGE_WIDTH = 600
-    val IMAGE_HEIGHT = (IMAGE_WIDTH / aspectRatio).toInt()
+    companion object {
+        private const val aspectRatio = 16.0 / 9.0
+        private const val IMAGE_WIDTH = 1200
+        private const val IMAGE_HEIGHT = (IMAGE_WIDTH / aspectRatio).toInt()
+        private const val samplesPerPixel = 200
+        private const val maxDepth = 70
+    }
 
     val imageBuffer = BufferedImage(IMAGE_WIDTH, IMAGE_HEIGHT, BufferedImage.TYPE_INT_RGB)
 
     fun render() {
         val startTime = System.currentTimeMillis()
-        // Image
-        val samplesPerPixel = 100
-        val maxDepth = 50
+        println("Rendering started")
 
         // World
         val world = HittableList(
@@ -39,27 +39,23 @@ class Renderer(
         val camera = Camera()
         val allPixels = IMAGE_WIDTH * IMAGE_HEIGHT
         var currentPixelsPainted = 0
+        var currentPercent = 0
 
         // Render
         for (y in 0 until IMAGE_HEIGHT) {
             for (x in 0 until IMAGE_WIDTH) {
 
-                var color = Color(0.0, 0.0, 0.0)
+                val color = sampleColorForPixel(x, y, camera, world)
 
-                for (s in 0 until samplesPerPixel) {
-                    // add random to sample to get anti-aliasing
-                    val u = (x + Math.random()) / (IMAGE_WIDTH - 1)
-                    val v = (y + Math.random()) / (IMAGE_HEIGHT - 1)
-                    val ray = camera.getRay(u, v)
-                    color += rayColor(ray, world, maxDepth)
-                }
-                // normalize color based on samples per pixel
-                color /= samplesPerPixel.toDouble()
                 // image coordinates are flipped
                 imageBuffer.setRGB(x, IMAGE_HEIGHT - y - 1, color.toAwtColor().rgb)
                 currentPixelsPainted++
+
                 val percentage = (currentPixelsPainted.toDouble() / allPixels.toDouble()) * 100
-                progressUpdater(percentage.toInt())
+                if (percentage.toInt() != currentPercent) {
+                    currentPercent = percentage.toInt()
+                    println("Rendering: $currentPercent%")
+                }
             }
         }
 
@@ -67,6 +63,23 @@ class Renderer(
         // time in seconds
         val time = (endTime - startTime) / 1000.0
         println("Rendered in $time s")
+    }
+
+    private fun sampleColorForPixel(x: Int, y: Int, camera: Camera, world: Hittable): Color {
+
+        var color = Color(0.0, 0.0, 0.0)
+
+        for (s in 0 until samplesPerPixel) {
+            // add random to sample to get anti-aliasing
+            val u = (x + Math.random()) / (IMAGE_WIDTH - 1)
+            val v = (y + Math.random()) / (IMAGE_HEIGHT - 1)
+            val ray = camera.getRay(u, v)
+            color += rayColor(ray, world, maxDepth)
+        }
+
+        // normalize color based on samples per pixel
+        color /= samplesPerPixel.toDouble()
+        return color
     }
 
     private fun rayColor(ray: Ray, world: Hittable, depth: Int): Color {
@@ -77,17 +90,20 @@ class Renderer(
             return Color(0.0, 0.0, 0.0)
         }
 
-        if (hitRecord != null) { // ray hit something
-            val scatter = hitRecord.material.scatter(ray, hitRecord)
-            if (scatter != null) {
-                return rayColor(scatter.ray, world, depth - 1) * scatter.color
+        return when (hitRecord) {
+            null -> {
+                // background color
+                val unitVectorOfDirection = ray.direction.unitVector()
+                val t = 0.5 * (unitVectorOfDirection.y + 1.0) // normalize t to 0.0 to 1.0
+                return (Color(1.0, 1.0, 1.0) * (1.0 - t)) + (Color(0.5, 0.7, 1.0) * t) // make it blue
             }
-            return Color(0.0, 0.0, 0.0)
-        }
 
-        // background color
-        val unitVectorOfDirection = ray.direction.unitVector()
-        val t = 0.5 * (unitVectorOfDirection.y + 1.0) // normalize t to 0.0 to 1.0
-        return (Color(1.0, 1.0, 1.0) * (1.0 - t)) + (Color(0.5, 0.7, 1.0) * t) // make it blue
+            else -> {
+                when (val scatter = hitRecord.material.scatter(ray, hitRecord)) {
+                    null -> Color(0.0, 0.0, 0.0)
+                    else -> return rayColor(scatter.ray, world, depth - 1) * scatter.color
+                }
+            }
+        }
     }
 }
